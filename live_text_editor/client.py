@@ -12,9 +12,7 @@ class Client(tk.Tk):
 
         self.socket = socket()
         self.socket.connect((self.ip, self.port))
-        print("Connected")
         content = self.socket.recv(1024).decode()
-        print("Content: " + content)
 
         # Threading things
         self.thread = Thread(
@@ -48,8 +46,9 @@ class Client(tk.Tk):
         while True:
             actions = self.socket.recv(1024).decode().split(config.config["end_sep"])
             for action in actions:
-                action = actions.split(config.config["sep"])
-                self.insert_text(action[0], action[1])
+                action = action.split(config.config["sep"])
+                if len(action) == 2:
+                    self.insert_text(action[0], action[1])
 
 
     def on_key_press(self, event):
@@ -59,7 +58,7 @@ class Client(tk.Tk):
             action = f"BackSpace{config.config['sep']}{self.text.index(tk.INSERT)}"
         else:
             action = f"{event.char}{config.config['sep']}{self.text.index(tk.INSERT)}"
-        self.socket.send(action+config.config["end_sep"].encode())
+        self.socket.send((action+config.config["end_sep"]).encode())
 
     def on_close(self):
         self.socket.send("Exiting".encode())
