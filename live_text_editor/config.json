@@ -1,0 +1,10 @@
+{
+	"standard_ip": "127.0.0.1",
+	"standard_port": 54271,
+	"window_size": {
+		"height": 1000,
+		"width": 1000
+	},
+	"sep": "<SEP>",
+	"default_file": "live_text_editor.txt"
+}
