@@ -46,8 +46,10 @@ class Client(tk.Tk):
 
     def update_text(self):
         while True:
-            action = self.socket.recv(1024).decode().split(config.config["sep"])
-            self.insert_text(action[0], action[1])
+            actions = self.socket.recv(1024).decode().split(config.config["end_sep"])
+            for action in actions:
+                action = actions.split(config.config["sep"])
+                self.insert_text(action[0], action[1])
 
 
     def on_key_press(self, event):
@@ -57,7 +59,7 @@ class Client(tk.Tk):
             action = f"BackSpace{config.config['sep']}{self.text.index(tk.INSERT)}"
         else:
             action = f"{event.char}{config.config['sep']}{self.text.index(tk.INSERT)}"
-        self.socket.send(action.encode())
+        self.socket.send(action+config.config["end_sep"].encode())
 
     def on_close(self):
         self.socket.send("Exiting".encode())
