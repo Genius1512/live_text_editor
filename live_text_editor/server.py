@@ -20,14 +20,14 @@ class Server(socket):
 
         self.bind(("0.0.0.0", self.port))
         self.listen(2)
-        self.connections = [
-            self.accept()[0],
-            self.accept()[0]
-        ]
+        self.connections = {
+            0: self.accept()[0],
+            1: self.accept()[0]
+        }
         print("Got connections")
         for conn in self.connections:
             print("Sending")
-            conn.sendall(content.encode())
+            self.connections[conn].sendall(content.encode())
 
         self.threads = [
             Thread(
@@ -52,4 +52,10 @@ class Server(socket):
                 content = self.connections[my_index].recv(1024).decode()
                 with open(self.file, "w") as f:
                     f.write(content)
-            self.connections[other_index].send(action)
+                self.connections[my_index].close()
+                del self.connections[my_index]
+                break
+            try:
+                self.connections[other_index].send(action)
+            except KeyError:
+                pass
