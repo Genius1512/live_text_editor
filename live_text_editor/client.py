@@ -1,6 +1,7 @@
 from socket import *
 from threading import Thread
 import tkinter as tk
+from time import sleep
 
 import config
 from console import *
@@ -78,12 +79,18 @@ class Client(socket):
             was_selected_last_time = bool(self.text.tag_ranges("sel"))
 
     def on_key_press(self, event):
+        if self.text.tag_ranges("sel"):
+            return
+
         if event.keysym in ["Up", "Down", "Left", "Right"]:
             return
         if event.keysym == "Return":
             char = "\n"
         elif event.keysym == "BackSpace":
-            char = "<-"
+            if str(self.text.index(tk.INSERT)) != "1.0":
+                char = "<-"
+            else:
+                return
         else:
             char = event.char
         self.send(f"{char}{config.sep}{self.text.index(tk.INSERT)}{config.end_sep}".encode())
