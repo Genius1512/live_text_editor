@@ -67,6 +67,7 @@ def main():
         console.print_exception()
         console.print("""Error when running Live Text Editor.
 Please try again later or contact Silvan Schmidt""", style="error")
+    input("Enter to quit")
 
 
 if __name__ == "__main__":
