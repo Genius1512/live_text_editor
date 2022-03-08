@@ -67,6 +67,13 @@ class Server(socket):
                 if actions_str == "exit":
                     self.connections[my_index][SOCKET].close()
                     self.connections[my_index][SOCKET] = None
+
+                    try:
+                        with open(self.file, "w") as f:
+                            f.write(self.content)
+                    except PermissionError:
+                        pass
+
                     break
 
                 actions = actions_str.split(config.end_sep)

@@ -10,6 +10,7 @@ class Spinner:
             status=text,
             spinner="dots"
         )
+        self.spinner.start()
 
     def stop(self):
         self.spinner.stop()

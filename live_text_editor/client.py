@@ -1,11 +1,25 @@
 from socket import *
 from threading import Thread
 import tkinter as tk
-from time import sleep
 
 import config
 from console import *
 from action import Action
+
+
+MOVING_KEYS = [
+    "Up",
+    "Down",
+    "Left",
+    "Right",
+    "Control_L",
+    "Control_R",
+    "Alt_L",
+    "Alt_R",
+    "Shift_L",
+    "Shift_R",
+    "Caps_Lock"
+]
 
 
 class Client(socket):
@@ -16,9 +30,18 @@ class Client(socket):
 
         # Socket things
         super(socket, self).__init__()
+        self.settimeout(10)
         spinner = Spinner("Connecting...")
-        self.connect((self.ip, self.port))
-        self.content = self.recv(1024).decode()
+        try:
+            self.connect((self.ip, self.port))
+            self.content = self.recv(1024).decode()
+        except timeout:
+            console.print("\nTimeout when connecting to the server; It may be full", style="error")
+            return
+        except ConnectionRefusedError:
+            console.print("\nCould not connect to the server; Check your internet connection and the availability of the server", style="error")
+            return
+
         spinner.stop()
         console.print("Connected", style="success")
 
@@ -82,7 +105,7 @@ class Client(socket):
         if self.text.tag_ranges("sel"):
             return
 
-        if event.keysym in ["Up", "Down", "Left", "Right"]:
+        if event.keysym in MOVING_KEYS:
             return
         if event.keysym == "Return":
             char = "\n"
@@ -93,6 +116,7 @@ class Client(socket):
                 return
         else:
             char = event.char
+        print(event.keysym)
         self.send(f"{char}{config.sep}{self.text.index(tk.INSERT)}{config.end_sep}".encode())
 
     def on_close(self):

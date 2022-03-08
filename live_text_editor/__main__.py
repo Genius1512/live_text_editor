@@ -62,7 +62,12 @@ def main():
     elif args.mode == "client":
         app = Client
 
-    app(args)
+    try:
+        app(args)
+    except Exception:
+        console.print_exception()
+        console.print("""Error when running Live Text Editor.
+Please try again later or contact Silvan Schmidt""", style="error")
 
 
 if __name__ == "__main__":
