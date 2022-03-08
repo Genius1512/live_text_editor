@@ -30,6 +30,7 @@ class Client(socket):
         self.root = tk.Tk()
         self.root.title("Live Text Editor")
         self.root.geometry(f"{config.height}x{config.width}")
+        self.root.configure(bg="#1e1e1e")
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.text = tk.Text(
@@ -37,6 +38,7 @@ class Client(socket):
             height=config.height-20,
             width=config.width-20
         )
+        self.text.configure(bg="#252527", fg="#9cdcfe", font=("Helvetica", 20))
         self.text.bind("<KeyPress>", self.on_key_press)
         self.text.pack()
         self.text.insert("0.0", self.content)
@@ -59,6 +61,8 @@ class Client(socket):
                         self.text.insert(action.pos, action.char)
 
     def on_key_press(self, event):
+        if event.keysym in ["Up", "Down", "Left", "Right"]:
+            return
         if event.keysym == "Return":
             char = "\n"
         elif event.keysym == "BackSpace":

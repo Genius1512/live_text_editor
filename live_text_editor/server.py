@@ -77,7 +77,6 @@ class Server(socket):
                 for conn_i in self.connections:
                     if conn_i != my_index and self.connections[conn_i][SOCKET]: self.connections[conn_i][SOCKET].send(actions_str.encode())
             console.print(f"{my_index} disconnected", style="success")
-            print(self.content)
 
     def on_close(self, connections):
         for conn in connections:
