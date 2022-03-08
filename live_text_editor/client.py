@@ -39,7 +39,7 @@ class Client(socket):
             height=config.height-20,
             width=config.width-20
         )
-        self.text.configure(bg="#252527", fg="#9cdcfe", font=("Helvetica", 20))
+        self.text.configure(bg="#252527", fg="#9cdcfe", font=("Helvetica", 20), insertbackground="white")
         self.text.bind("<KeyPress>", self.on_key_press)
         self.text.pack()
         self.text.insert("0.0", self.content)
