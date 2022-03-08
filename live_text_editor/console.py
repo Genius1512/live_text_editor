@@ -1,5 +1,5 @@
-from rich.status import Status
 from rich.console import Console
+from rich.status import Status
 from rich.style import Style
 from rich.theme import Theme
 

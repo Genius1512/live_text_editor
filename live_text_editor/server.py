@@ -1,12 +1,11 @@
-from socket import *
-from threading import Thread
 from atexit import register
 from functools import partial
+from socket import *
+from threading import Thread
 
 import config
 from action import Action
 from console import *
-
 
 # constants
 SOCKET = 0

@@ -1,11 +1,10 @@
+import tkinter as tk
 from socket import *
 from threading import Thread
-import tkinter as tk
 
 import config
-from console import *
 from action import Action
-
+from console import *
 
 MOVING_KEYS = [
     "Up",

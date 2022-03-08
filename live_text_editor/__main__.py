@@ -1,11 +1,10 @@
-from argparse import ArgumentParser, ArgumentTypeError
 import re
+from argparse import ArgumentParser, ArgumentTypeError
 
-from exceptions import *
-from client import Client
-from server import Server
-from console import *
 import config
+from client import Client
+from console import *
+from server import Server
 
 
 def ip(arg_value):
