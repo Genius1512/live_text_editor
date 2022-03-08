@@ -1,10 +1,8 @@
-import json
-
-
-def get_config() -> dict:
-    with open("config.json", "r") as f:
-        return json.load(f)
-config = get_config()
-
-def windows_size_as_geometry() -> str:
-    return f"{config['window_size']['height']}x{config['window_size']['width']}"
+ip = "127.0.0.1"
+port = 54269
+file = "live_test_editor.txt"
+max_connections = 10
+sep = "-s-"
+end_sep = "-es-"
+width = 1000
+height = 1000

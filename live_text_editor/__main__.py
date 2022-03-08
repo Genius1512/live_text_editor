@@ -1,52 +1,68 @@
-from sys import argv
-from client import *
-from server import *
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentTypeError
+import re
+
+from exceptions import *
+from client import Client
+from server import Server
+from console import *
+import config
 
 
-def main():
+def ip(arg_value):
+    pattern = re.compile("(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]){3}\.([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))|localhost")
+    if not pattern.match(arg_value):
+        raise ArgumentTypeError(f"Invalid ip '{arg_value}'")
+    return arg_value
 
+
+# TODO: create port() function
+
+
+def parse_args():
     parser = ArgumentParser(
-        description="Live Text Editor"
+        description = "Live Text Editor"
     )
+
     parser.add_argument(
         "mode",
-        help="Server or client"
+        choices=["client", "server"],
+        help="Client or Server"
     )
     parser.add_argument(
         "--ip",
-        default=config.config["standard_ip"],
-        required=False,
-        help="IP to connect to"
+        default=config.ip,
+        type=ip,
+        help="The IP to connect to"
     )
     parser.add_argument(
-        "--port",
-        default=config.config["standard_port"],
+        "--port", "-p",
+        default=config.port,
+        type=int, # TODO: use type port()
+        help="The port to connect to/to setup the server on"
+    )
+    parser.add_argument(
+        "--file", "-f",
+        default=config.file,
+        help="The file to edit"
+    )
+    parser.add_argument(
+        "--max","-m",
+        default=config.max_connections,
         type=int,
-        help="Port to connect to/Port o setup server on"
+        help="Maximal connections"
     )
-    parser.add_argument(
-        "--file",
-        default=config.config["default_file"],
-        required=False,
-        help="File to edit"
-    )
-    args = parser.parse_args()
 
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
     if args.mode == "server":
-        server = Server(
-            file=args.file,
-            port=args.port
-        )
-
+        app = Server
     elif args.mode == "client":
-        client = Client(
-            ip=args.ip,
-            port=args.port
-        )
+        app = Client
 
-    else:
-        print(f"Invalid mode {args.mode}")
+    app(args)
 
 
 if __name__ == "__main__":

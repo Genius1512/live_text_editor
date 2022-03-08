@@ -1,61 +1,86 @@
-import config
 from socket import *
 from threading import Thread
 from atexit import register
 
+import config
+from action import Action
+
+
+# constants
+SOCKET = 0
+THREAD = 1
+
 
 class Server(socket):
-    def __init__(self, file = config.config["default_file"], port = config.config["standard_port"]):
-        # get file content
+    def __init__(self, args):
+        # Server things
+        self.port = args.port
+        self.max_connections = args.max
+        self.file = args.file
+
+        # Load file content
         try:
-            with open(file, "r") as f:
-                content = f.read()
+            with open(self.file, "r") as f:
+                self.content = f.read()
+            if self.content == "":
+                self.content = "Lorem ipsum dolor sit amet"
         except FileNotFoundError:
-            content = "Lorem ipsum dolor sit amet"
-        self.file = file
+            with open(self.file, "w") as f:
+                f.write("Lorem ipsum dolor sit amet")
+            self.content = "Lorem ipsum dolor sit amet"
 
-        super().__init__()
-        register(self.close)
-        self.port = port
+        register(self.on_close)
 
+        # Socket things
+        super(socket, self).__init__()
         self.bind(("0.0.0.0", self.port))
-        self.listen(2)
-        self.connections = {
-            0: self.accept()[0],
-            1: self.accept()[0]
-        }
-        print("Got connections")
+        self.listen(self.max_connections)
+
+        self.connections: dict[int, list[socket, Thread]] = {}
+        for i in range(self.max_connections):
+            self.connections[i] = [
+                None,
+                Thread(
+                    target=self.handler,
+                    args=(i,)
+                )
+            ]
         for conn in self.connections:
-            print("Sending")
-            self.connections[conn].sendall(content.encode())
+            self.connections[conn][THREAD].start()
+        for conn in self.connections:
+            self.connections[conn][THREAD].join()
 
-        self.threads = [
-            Thread(
-                target=self.handler,
-                args=(0,)
-            ),
-            Thread(
-                target=self.handler,
-                args=(1,)
-            )
-        ]
-        for thread in self.threads:
-            thread.start()
-        for thread in self.threads:
-            thread.join()
-
-    def handler(self, my_index: int):
-        other_index = not my_index
+    def handler(self, my_index):
+        print(f"{my_index} started")
         while True:
-            action = self.connections[my_index].recv(1024)
-            if action.decode() == "Exiting":
-                content = self.connections[my_index].recv(1024).decode()
-                with open(self.file, "w") as f:
-                    f.write(content)
-                self.connections[my_index].close()
-                del self.connections[my_index]
-                break
-            try:
-                self.connections[other_index].send(action)
-            except KeyError:
-                pass
+            self.connections[my_index][SOCKET] = self.accept()[0] # get connection
+            print(f"{my_index} got connection")
+            self.connections[my_index][SOCKET].send(self.content.encode())
+            while True:
+                actions_str = self.connections[my_index][SOCKET].recv(1024).decode()
+
+                if actions_str == "exit":
+                    self.connections[my_index][SOCKET].close()
+                    self.connections[my_index][SOCKET] = None
+                    break
+
+                actions = actions_str.split(config.end_sep)
+                for action_str in actions:
+                    if action_str != "":
+                        self.content = Action(action_str).insert_to_text(self.content)
+
+                for conn_i in self.connections:
+                    if conn_i != my_index and self.connections[conn_i][SOCKET]: self.connections[conn_i][SOCKET].send(actions_str.encode())
+            print(f"{my_index} disconnected")
+
+    def on_close(self):
+        for conn in self.connections:
+            if self.connections[conn][SOCKET]:
+                self.connections[conn][SOCKET].send(("exit"+config.end_sep).encode())
+                self.connections[conn][SOCKET].close()
+
+        with open(self.file, "w") as f:
+            f.write(self.content)
+
+    def __repr__(self):
+        return f"Server on {self.ip}:{self.port}"
