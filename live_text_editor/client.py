@@ -3,6 +3,7 @@ from threading import Thread
 import tkinter as tk
 
 import config
+from console import *
 from action import Action
 
 
@@ -14,8 +15,11 @@ class Client(socket):
 
         # Socket things
         super(socket, self).__init__()
+        spinner = Spinner("Connecting...")
         self.connect((self.ip, self.port))
         self.content = self.recv(1024).decode()
+        spinner.stop()
+        console.print("Connected", style="success")
 
         self.updater = Thread(
             target=self.update_text,
@@ -24,7 +28,7 @@ class Client(socket):
         self.updater.start()
 
         self.root = tk.Tk()
-        self.root.title = "Live Text Editor"
+        self.root.title("Live Text Editor")
         self.root.geometry(f"{config.height}x{config.width}")
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
@@ -45,7 +49,7 @@ class Client(socket):
             actions = actions_str.split(config.end_sep)
             for action_str in actions:
                 if action_str == "exit":
-                    print("Server closed")
+                    console.print("Server closed", style="log")
                     self.root.destroy()
                 elif action_str != "":
                     action = Action(action_str)

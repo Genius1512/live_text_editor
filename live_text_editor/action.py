@@ -14,7 +14,7 @@ class Action:
         if self.char == "<-":
             text[self.line] = text[self.line][:self.char_index-1] + text[self.line][self.char_index:]
         else:
-            text[self.line] = text[self.line][:self.char_index-1] + self.char + text[self.line][self.char_index-1:]
+            text[self.line] = text[self.line][:self.char_index] + self.char + text[self.line][self.char_index:]
 
         _text = ""
         for x in text:
