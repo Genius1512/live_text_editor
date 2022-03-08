@@ -43,6 +43,12 @@ class Client(socket):
         self.text.pack()
         self.text.insert("0.0", self.content)
 
+        self.selection_handler = Thread(
+            target=self.handle_selection,
+            daemon=True
+        )
+        self.selection_handler.start()
+
         self.root.mainloop()
 
     def update_text(self):
@@ -59,6 +65,17 @@ class Client(socket):
                         self.text.delete(action.pos+"-1c")
                     else:
                         self.text.insert(action.pos, action.char)
+
+    def handle_selection(self):
+        was_selected_last_time = False
+        while True:
+            if self.text.tag_ranges("sel") and not was_selected_last_time:
+                print("Disable")
+                self.text.configure(state="disabled")
+            elif not self.text.tag_ranges("sel") and was_selected_last_time:
+                print("Enable")
+                self.text.configure(state="normal")
+            was_selected_last_time = bool(self.text.tag_ranges("sel"))
 
     def on_key_press(self, event):
         if event.keysym in ["Up", "Down", "Left", "Right"]:
