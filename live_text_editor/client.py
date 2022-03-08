@@ -1,72 +1,68 @@
-import tkinter as tk
-import config
 from socket import *
 from threading import Thread
+import tkinter as tk
+
+import config
+from action import Action
 
 
-class Client(tk.Tk):
-    def __init__(self, ip: str = config.config["standard_ip"], port: int = config.config["standard_port"]):
+class Client(socket):
+    def __init__(self, args):
+        # Client things
+        self.ip = args.ip
+        self.port = args.port
+
         # Socket things
-        self.ip = ip
-        self.port = port
+        super(socket, self).__init__()
+        self.connect((self.ip, self.port))
+        self.content = self.recv(1024).decode()
 
-        self.socket = socket()
-        self.socket.connect((self.ip, self.port))
-        content = self.socket.recv(1024).decode()
-
-        # Threading things
-        self.thread = Thread(
+        self.updater = Thread(
             target=self.update_text,
             daemon=True
         )
-        self.thread.start()
+        self.updater.start()
 
-
-        # Tkinter things
-        super().__init__()
-        self.title("Live Text Editor")
-        self.geometry(config.windows_size_as_geometry())
-        self.protocol("WM_DELETE_WINDOW", self.on_close)
+        self.root = tk.Tk()
+        self.root.title = "Live Text Editor"
+        self.root.geometry(f"{config.height}x{config.width}")
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.text = tk.Text(
-            self,
-            height=config.config["window_size"]["height"],
-            width=config.config["window_size"]["width"]
+            self.root,
+            height=config.height-20,
+            width=config.width-20
         )
+        self.text.bind("<KeyPress>", self.on_key_press)
         self.text.pack()
-        self.text.bind(
-            "<KeyPress>",
-            self.on_key_press
-        )
-        self.text.insert("0.0", content)
+        self.text.insert("0.0", self.content)
 
-        self.mainloop()
+        self.root.mainloop()
 
     def update_text(self):
         while True:
-            actions = self.socket.recv(1024).decode().split(config.config["end_sep"])
-            for action in actions:
-                action = action.split(config.config["sep"])
-                if len(action) == 2:
-                    self.insert_text(action[0], action[1])
-
+            actions_str = self.recv(1024).decode()
+            actions = actions_str.split(config.end_sep)
+            for action_str in actions:
+                if action_str == "exit":
+                    print("Server closed")
+                    self.root.destroy()
+                elif action_str != "":
+                    action = Action(action_str)
+                    if action.char == "<-":
+                        self.text.delete(action.pos+"-1c")
+                    else:
+                        self.text.insert(action.pos, action.char)
 
     def on_key_press(self, event):
         if event.keysym == "Return":
-            action = f"\n{config.config['sep']}{self.text.index(tk.INSERT)}"
+            char = "\n"
         elif event.keysym == "BackSpace":
-            action = f"BackSpace{config.config['sep']}{self.text.index(tk.INSERT)}"
+            char = "<-"
         else:
-            action = f"{event.char}{config.config['sep']}{self.text.index(tk.INSERT)}"
-        self.socket.send((action+config.config["end_sep"]).encode())
+            char = event.char
+        self.send(f"{char}{config.sep}{self.text.index(tk.INSERT)}{config.end_sep}".encode())
 
     def on_close(self):
-        self.socket.send("Exiting".encode())
-        self.socket.send(self.text.get("0.0", "end").encode())
-        self.destroy()
-
-    def insert_text(self, char, pos):
-        if char == "BackSpace":
-            self.text.delete(pos+"-1c")
-        else:
-            self.text.insert(pos, char)
+        self.send("exit".encode())
+        self.root.destroy()
